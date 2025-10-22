@@ -40,14 +40,14 @@ export function FloatingChatbot() {
           />
         )}
         <MessageCircle className="h-7 w-7 relative z-10" />
-        
+
         {/* Notification badge - solo cuando está cerrado */}
         {!isOpen && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: [0, 1.2, 1] }}
             transition={{ delay: 0.5, duration: 0.3 }}
-            className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white"
+            className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"
           />
         )}
       </motion.button>
