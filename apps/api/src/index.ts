@@ -1,14 +1,14 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import * as dotenv from "dotenv";
+import { serve } from "@hono/node-server";
 import { authRoutes } from "./routes/auth";
 import { businessRoutes } from "./routes/business";
 import { appointmentRoutes } from "./routes/appointments";
 import { chatRoutes } from "./routes/chat";
+import * as dotenv from "dotenv";
 
-// Load environment variables
-dotenv.config({ path: "../../.env" });
+dotenv.config();
 
 const app = new Hono();
 
@@ -27,7 +27,7 @@ app.get("/health", (c) => {
   return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Routes
+// Rutas
 app.route("/auth", authRoutes);
 app.route("/businesses", businessRoutes);
 app.route("/appointments", appointmentRoutes);
@@ -51,9 +51,12 @@ app.onError((err, c) => {
 
 const port = Number(process.env.API_PORT) || 3001;
 
-console.log(`API Server started on port ${port} 🚀`);
-
-export default {
-  port,
-  fetch: app.fetch,
-};
+serve(
+  {
+    fetch: app.fetch,
+    port: port,
+  },
+  (info) => {
+    console.log(`API Server started on http://localhost:${info.port} 🚀`);
+  }
+);

@@ -60,16 +60,25 @@ export function ChatbotProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+      // Prepare conversation history (excluding the last user message)
+      const conversationHistory = [...messages, userMessage]
+        .slice(0, -1)
+        .map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+
+      const response = await fetch(`${API_URL}/chat/general`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          })),
+          message: userMessage.content,
+          conversationHistory,
         }),
       });
 
