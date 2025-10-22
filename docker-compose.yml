@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: clonchat-db
+    environment:
+      POSTGRES_USER: clonchat_user
+      POSTGRES_PASSWORD: clonchat_password
+      POSTGRES_DB: clonchat_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clonchat_user -d clonchat_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: clonchat-api
+    environment:
+      DATABASE_URL: postgresql://clonchat_user:clonchat_password@database:5432/clonchat_db
+      API_PORT: 3001
+      CHATBOT_URL: http://chatbot:8000
+      JWT_SECRET: dev_jwt_secret_change_in_production
+      NODE_ENV: development
+    ports:
+      - "3001:3001"
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    command: npm run dev
+
+  chatbot:
+    build:
+      context: .
+      dockerfile: apps/chatbot-py/Dockerfile
+    container_name: clonchat-chatbot
+    environment:
+      CHATBOT_PORT: 8000
+      PYTHONUNBUFFERED: 1
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/chatbot-py:/app
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pg_data:
+    driver: local
+
