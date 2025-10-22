@@ -12,7 +12,7 @@ export function HeroSection() {
   const { t } = useI18n();
 
   return (
-    <section className="min-h-screen bg-white flex items-center relative overflow-hidden pt-16 md:pt-0">
+    <section className="min-h-screen bg-white flex items-center relative overflow-hidden pt-20 md:pt-24">
       {/* Mobile-specific Lottie container */}
       <div className="absolute inset-0 z-0 opacity-10 pointer-events-none overflow-hidden md:hidden">
         <div className="w-full h-full flex items-center justify-center px-4">
@@ -127,4 +127,3 @@ export function HeroSection() {
     </section>
   );
 }
-
