@@ -26,28 +26,33 @@ const createBusinessSchema = z.object({
   visualConfig: z
     .object({
       logoUrl: z.string().url().optional(),
-      theme: z.enum(["light", "dark", "blue"]),
+      theme: z.enum(["light", "dark"]),
       primaryColor: z.string().optional(),
       welcomeMessage: z.string().optional(),
     })
     .optional(),
   appointmentConfig: z.object({
-    duration: z.number().min(15).max(480),
-    dataToCollect: z.array(z.enum(["name", "email", "phone"])),
-    services: z
-      .array(
-        z.object({
-          name: z.string(),
-          duration: z.number(),
-          price: z.number().optional(),
-        })
-      )
-      .optional(),
+    services: z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        duration: z.number(),
+        price: z.number().optional(),
+      })
+    ),
   }),
   availability: z
     .array(
       z.object({
-        day: z.string(),
+        day: z.enum([
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+        ]),
         slots: z.array(
           z.object({
             start: z.string(),
@@ -103,9 +108,13 @@ businessRoutes.post(
       const [newBusiness] = await db
         .insert(businesses)
         .values({
-          ...businessData,
-          userId: authUser.userId,
+          name: businessData.name,
+          description: businessData.description,
+          subdomain: businessData.subdomain,
           visualConfig: businessData.visualConfig || { theme: "light" },
+          appointmentConfig: businessData.appointmentConfig,
+          availability: businessData.availability,
+          userId: authUser.userId,
         })
         .returning();
 
@@ -163,7 +172,12 @@ businessRoutes.put(
       const [updatedBusiness] = await db
         .update(businesses)
         .set({
-          ...updateData,
+          name: updateData.name,
+          description: updateData.description,
+          subdomain: updateData.subdomain,
+          visualConfig: updateData.visualConfig,
+          appointmentConfig: updateData.appointmentConfig,
+          availability: updateData.availability,
           updatedAt: new Date(),
         })
         .where(eq(businesses.id, businessId))
@@ -176,6 +190,24 @@ businessRoutes.put(
     }
   }
 );
+
+// GET /businesses/check-subdomain/:subdomain - Check if subdomain is available
+businessRoutes.get("/check-subdomain/:subdomain", async (c) => {
+  const subdomain = c.req.param("subdomain");
+
+  try {
+    const [existingBusiness] = await db
+      .select({ id: businesses.id })
+      .from(businesses)
+      .where(eq(businesses.subdomain, subdomain))
+      .limit(1);
+
+    return c.json({ available: !existingBusiness });
+  } catch (error) {
+    console.error("Check subdomain error:", error);
+    return c.json({ error: "Failed to check subdomain" }, 500);
+  }
+});
 
 // GET /businesses/subdomain/:subdomain - Get public business config
 businessRoutes.get("/subdomain/:subdomain", async (c) => {

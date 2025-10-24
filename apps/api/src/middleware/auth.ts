@@ -16,6 +16,30 @@ type Variables = {
 export const authMiddleware: MiddlewareHandler<{
   Variables: Variables;
 }> = async (c, next) => {
+  // Try NextAuth headers first (for frontend integration)
+  const userId = c.req.header("X-User-Id");
+  const userEmail = c.req.header("X-User-Email");
+
+  if (userId && userEmail) {
+    // Validate that the user exists in the database
+    try {
+      const { db, users, eq } = await import("@clonchat/core");
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, parseInt(userId)))
+        .limit(1);
+
+      if (user && user.email === userEmail) {
+        c.set("user", { userId: parseInt(userId), email: userEmail });
+        return await next();
+      }
+    } catch (error) {
+      console.error("Error validating NextAuth user:", error);
+    }
+  }
+
+  // Fallback to JWT token authentication
   const authHeader = c.req.header("Authorization");
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

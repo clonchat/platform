@@ -1,14 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useContactModal } from "@/components/ui/contact-modal";
 import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import { Calendar, ShoppingCart, ArrowRight } from "lucide-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useRouter } from "next/navigation";
 
 export function HeroSection() {
-  const contact = useContactModal();
+  const router = useRouter();
   const { t } = useI18n();
 
   return (
@@ -78,9 +78,9 @@ export function HeroSection() {
             <Button
               size="lg"
               className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-8 py-4 text-lg font-medium rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
-              onClick={() => contact.open()}
+              onClick={() => router.push("/register")}
             >
-              {t("hero_cta_primary")}
+              Comienza Gratis
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>

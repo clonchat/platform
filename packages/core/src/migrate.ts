@@ -4,7 +4,7 @@ import postgres from "postgres";
 import * as dotenv from "dotenv";
 
 // Load environment variables
-dotenv.config({ path: "../../.env" });
+dotenv.config();
 
 const runMigrations = async () => {
   const databaseUrl = process.env.DATABASE_URL;
@@ -30,4 +30,3 @@ runMigrations().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

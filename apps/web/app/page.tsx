@@ -6,6 +6,7 @@ import { StatsSection } from "@/components/stats-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { CTASection } from "@/components/cta-section";
 import { Footer } from "@/components/footer";
+import { FloatingChatbot } from "@/components/floating-chatbot";
 
 export default function Home() {
   return (
@@ -26,7 +27,7 @@ export default function Home() {
         <CTASection />
         <Footer />
       </main>
+      <FloatingChatbot />
     </>
   );
 }
-

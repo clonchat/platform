@@ -1,3 +1,5 @@
+import { getSession } from "next-auth/react";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export class ApiClient {
@@ -6,8 +8,8 @@ export class ApiClient {
 
   constructor(baseUrl: string = API_URL) {
     this.baseUrl = baseUrl;
-    
-    // Load token from localStorage if available
+
+    // Mantener compatibilidad con token legacy
     if (typeof window !== "undefined") {
       this.token = localStorage.getItem("auth_token");
     }
@@ -32,13 +34,25 @@ export class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
-    if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
+    // Intentar obtener el token de NextAuth primero
+    try {
+      const session = await getSession();
+      if (session?.user) {
+        // Enviar la información del usuario directamente en el header
+        // El backend puede usar esta información para autenticar
+        headers["X-User-Id"] = session.user.id;
+        headers["X-User-Email"] = session.user.email;
+      }
+    } catch (e) {
+      // Si falla, intentar con token legacy
+      if (this.token) {
+        headers["Authorization"] = `Bearer ${this.token}`;
+      }
     }
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -101,7 +115,38 @@ export class ApiClient {
   }
 
   async getBusinessBySubdomain(subdomain: string) {
-    return this.request<{ business: any }>(`/businesses/subdomain/${subdomain}`);
+    return this.request<{ business: any }>(
+      `/businesses/subdomain/${subdomain}`
+    );
+  }
+
+  async checkSubdomainAvailability(subdomain: string) {
+    return this.request<{ available: boolean }>(
+      `/businesses/check-subdomain/${subdomain}`
+    );
+  }
+
+  // Email verification endpoints
+  async verifyEmail(token: string) {
+    return this.request<{ message: string; user: any }>("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async resendVerificationEmail(email: string) {
+    return this.request<{ message: string }>("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  // User status endpoint
+  async getUserStatus() {
+    return this.request<{
+      hasCompletedOnboarding: boolean;
+      emailVerified: boolean;
+    }>("/user/status");
   }
 
   // Appointment endpoints
@@ -160,4 +205,3 @@ export class ApiClient {
 
 // Export singleton instance
 export const apiClient = new ApiClient();
-

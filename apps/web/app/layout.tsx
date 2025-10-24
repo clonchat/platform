@@ -5,7 +5,6 @@ import { ContactModalProvider } from "@/components/ui/contact-modal";
 import { I18nProvider } from "@/lib/i18n";
 import { AuthProvider } from "@/lib/auth-context";
 import { ChatbotProvider } from "@/components/ui/chat-widget";
-import { FloatingChatbot } from "@/components/floating-chatbot";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -48,10 +47,7 @@ export default function RootLayout({
         <I18nProvider>
           <AuthProvider>
             <ContactModalProvider>
-              <ChatbotProvider>
-                {children}
-                <FloatingChatbot />
-              </ChatbotProvider>
+              <ChatbotProvider>{children}</ChatbotProvider>
             </ContactModalProvider>
           </AuthProvider>
         </I18nProvider>
@@ -59,4 +55,3 @@ export default function RootLayout({
     </html>
   );
 }
-

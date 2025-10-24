@@ -1,12 +1,26 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext } from "react";
+import { SessionProvider, useSession, signIn, signOut } from "next-auth/react";
+import type { Session } from "next-auth";
 import { apiClient } from "./api";
 
 interface User {
-  id: number;
+  id: string;
   email: string;
   name?: string;
+}
+
+// Extend Session type to include id
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name?: string;
+      image?: string;
+    };
+  }
 }
 
 interface AuthContextType {
@@ -15,73 +29,77 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = async () => {
-      try {
-        const token = apiClient.getToken();
-        if (token) {
-          const { user } = await apiClient.getMe();
-          setUser(user);
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        apiClient.setToken(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
+function AuthProviderInner({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
 
   const login = async (email: string, password: string) => {
-    try {
-      const { user, token } = await apiClient.login(email, password);
-      apiClient.setToken(token);
-      setUser(user);
-    } catch (error) {
-      throw error;
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      throw new Error(result.error);
     }
   };
 
   const register = async (email: string, password: string, name?: string) => {
     try {
-      const { user, token } = await apiClient.register(email, password, name);
-      apiClient.setToken(token);
-      setUser(user);
+      // Crear el usuario primero a través de la API
+      await apiClient.register(email, password, name);
+
+      // Luego hacer login automáticamente con NextAuth
+      await login(email, password);
     } catch (error) {
       throw error;
     }
   };
 
-  const logout = () => {
-    apiClient.setToken(null);
-    setUser(null);
+  const loginWithGoogle = async () => {
+    await signIn("google", { callbackUrl: "/dashboard" });
   };
+
+  const logout = async () => {
+    await signOut({ callbackUrl: "/" });
+  };
+
+  const user: User | null = session?.user
+    ? {
+        id: session.user.id || "",
+        email: session.user.email || "",
+        name: session.user.name || undefined,
+      }
+    : null;
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading,
-        isAuthenticated: !!user,
+        isLoading: status === "loading",
+        isAuthenticated: !!session?.user,
         login,
         register,
+        loginWithGoogle,
         logout,
       }}
     >
       {children}
     </AuthContext.Provider>
+  );
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <AuthProviderInner>{children}</AuthProviderInner>
+    </SessionProvider>
   );
 }
 
@@ -92,4 +110,3 @@ export function useAuth() {
   }
   return context;
 }
-

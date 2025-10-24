@@ -7,9 +7,11 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // Get database URL from environment variable
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  "postgresql://clonchat_user:clonchat_password@localhost:5433/clonchat_db";
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
 
 // Create postgres connection
 const queryClient = postgres(databaseUrl);

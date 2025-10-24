@@ -4,6 +4,15 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FullScreenLoading } from "@/components/ui/loading";
 
 export default function DashboardLayout({
   children,
@@ -21,9 +30,10 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Cargando...</div>
-      </div>
+      <FullScreenLoading
+        title="Cargando Clonchat"
+        subtitle="Preparando tu dashboard..."
+      />
     );
   }
 
@@ -37,7 +47,10 @@ export default function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-2xl font-bold text-blue-600">
+              <Link
+                href="/dashboard"
+                className="text-2xl font-bold text-blue-600"
+              >
                 Clonchat
               </Link>
               <Link
@@ -56,12 +69,18 @@ export default function DashboardLayout({
 
             <div className="flex items-center space-x-4">
               <span className="text-gray-600">{user?.email}</span>
-              <button
-                onClick={logout}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900"
-              >
-                Cerrar Sesión
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {user?.name || user?.email}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={logout}>
+                    Cerrar Sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -73,4 +92,3 @@ export default function DashboardLayout({
     </div>
   );
 }
-

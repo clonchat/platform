@@ -6,6 +6,7 @@ import { authRoutes } from "./routes/auth";
 import { businessRoutes } from "./routes/business";
 import { appointmentRoutes } from "./routes/appointments";
 import { chatRoutes } from "./routes/chat";
+import { userRoutes } from "./routes/user";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -32,6 +33,7 @@ app.route("/auth", authRoutes);
 app.route("/businesses", businessRoutes);
 app.route("/appointments", appointmentRoutes);
 app.route("/chat", chatRoutes);
+app.route("/user", userRoutes);
 
 // 404 handler
 app.notFound((c) => {

@@ -1,9 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { X, Mail, Loader2 } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import emailjs from "@emailjs/browser";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type ContactModalContextValue = {
   open: () => void;
@@ -41,12 +52,18 @@ export function ContactModalProvider({
   return (
     <>
       {children}
-      {isOpen && <ContactModal />}
+      <ContactModal open={isOpen} onOpenChange={setIsOpen} />
     </>
   );
 }
 
-function ContactModal() {
+function ContactModal({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const { close } = useContactModal();
   const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
@@ -55,25 +72,19 @@ function ContactModal() {
   >("idle");
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={close} />
-      <div className="relative bg-white w-[90%] max-w-lg rounded-2xl shadow-2xl p-6 md:p-8">
-        <button
-          aria-label="Close"
-          className="absolute right-3 top-3 p-2 rounded-md hover:bg-gray-100"
-          onClick={close}
-        >
-          <X className="h-5 w-5 text-gray-600" />
-        </button>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-[#2563eb] rounded-lg flex items-center justify-center">
-            <Mail className="h-5 w-5 text-white" />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[90%] max-w-lg">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#2563eb] rounded-lg flex items-center justify-center">
+              <Mail className="h-5 w-5 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-gray-900">
+              {t("contact_title")}
+            </DialogTitle>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">
-            {t("contact_title")}
-          </h3>
-        </div>
-        <p className="text-gray-600 mb-6">{t("contact_desc")}</p>
+          <p className="text-gray-600">{t("contact_desc")}</p>
+        </DialogHeader>
         <form
           className="space-y-4"
           onSubmit={async (e) => {
@@ -127,51 +138,47 @@ Enviado desde el formulario de contacto de ClonChat`,
           }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
+            <Input
               name="name"
               placeholder={t("contact_name_placeholder")}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
               required
             />
-            <input
+            <Input
               name="email"
               type="email"
               placeholder={t("contact_email_placeholder")}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
               required
             />
           </div>
-          <input
+          <Input
             name="company"
             placeholder={t("contact_company_placeholder")}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           />
-          <textarea
+          <Textarea
             name="message"
             placeholder={t("contact_message_placeholder")}
             rows={4}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
           />
           {submitStatus === "success" && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 text-sm">
+            <Alert>
+              <AlertDescription>
                 ¡Mensaje enviado correctamente! Te contactaremos pronto.
-              </p>
-            </div>
+              </AlertDescription>
+            </Alert>
           )}
 
           {submitStatus === "error" && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">
+            <Alert variant="destructive">
+              <AlertDescription>
                 Error al enviar el mensaje. Por favor, inténtalo de nuevo.
-              </p>
-            </div>
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              variant="outline"
               onClick={() => {
                 close();
                 setSubmitStatus("idle");
@@ -179,27 +186,23 @@ Enviado desde el formulario de contacto de ClonChat`,
               disabled={isLoading}
             >
               {t("contact_cancel")}
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-md bg-[#2563eb] text-white hover:bg-[#1d4ed8] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              disabled={isLoading}
-            >
+            </Button>
+            <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Enviando...
                 </>
               ) : (
                 t("contact_send")
               )}
-            </button>
+            </Button>
           </div>
           <p className="text-xs text-gray-500 pt-2">
             Tu mensaje será enviado directamente a nuestro equipo
           </p>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { useContactModal } from "@/components/ui/contact-modal";
 import { useI18n } from "@/lib/i18n";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useRouter } from "next/navigation";
 
 export function CTASection() {
-  const contact = useContactModal();
+  const router = useRouter();
   const { t } = useI18n();
 
   return (
@@ -34,10 +34,10 @@ export function CTASection() {
         <div className="flex justify-center">
           <Button
             size="lg"
-            onClick={() => contact.open()}
+            onClick={() => router.push("/register")}
             className="bg-white text-[#2563eb] hover:bg-gray-100 px-8 py-6 text-lg font-semibold rounded-lg shadow-xl hover:shadow-2xl transition-all duration-200"
           >
-            {t("cta_primary")}
+            Crear Cuenta Gratis
           </Button>
         </div>
 
@@ -46,4 +46,3 @@ export function CTASection() {
     </section>
   );
 }
-
